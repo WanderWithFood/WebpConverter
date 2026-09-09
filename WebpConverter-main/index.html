@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BINI In-House WebP Converter | Galaxy Studio Edition</title>
+    <meta name="description" content="Convert bulk JPG, JPEG, PNG, WEBP, BMP, GIF, AVIF images to WebP format with interactive editing, state management, unsupported file validation, and ZIP archive download.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- JSZip CDN for In-Browser ZIP Packaging -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Full-Screen Interactive Galaxy Motion Background Canvas -->
+    <canvas id="galaxyCanvas" class="galaxy-canvas"></canvas>
+
+    <!-- Background Ambient Glow Orbs -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-grid"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navbar Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div class="logo-text">
+                        <span class="brand-title">BINI <span class="accent-text">WEB-P</span></span>
+                        <span class="brand-subtitle">GALAXY STUDIO BATCH EDITION v4.0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="batch-feature-tag"><i class="fa-solid fa-layer-group"></i> Bulk & ZIP Engine</span>
+            </div>
+        </header>
+
+        <!-- Stepper Navigation Bar -->
+        <nav class="stepper-nav" aria-label="Workflow Steps">
+            <div class="step-item active" data-step="1" id="navStep1">
+                <div class="step-circle"><span class="step-num">1</span><i class="fa-solid fa-check check-icon"></i></div>
+                <div class="step-label">Upload Images</div>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="step-item" data-step="2" id="navStep2">
+                <div class="step-circle"><span class="step-num">2</span><i class="fa-solid fa-check check-icon"></i></div>
+                <div class="step-label">Edit & Quality</div>
+            </div>
+            <div class="step-line" id="line2"></div>
+            <div class="step-item" data-step="3" id="navStep3">
+                <div class="step-circle"><span class="step-num">3</span><i class="fa-solid fa-check check-icon"></i></div>
+                <div class="step-label">Batch Processing</div>
+            </div>
+            <div class="step-line" id="line3"></div>
+            <div class="step-item" data-step="4" id="navStep4">
+                <div class="step-circle"><span class="step-num">4</span><i class="fa-solid fa-check check-icon"></i></div>
+                <div class="step-label">Results & ZIP Download</div>
+            </div>
+        </nav>
+
+        <!-- Dynamic Main Content Container -->
+        <main class="main-content">
+            
+            <!-- ALERT NOTIFICATION BANNER FOR UNSUPPORTED FILES & SYSTEM ERRORS -->
+            <div id="validationBanner" class="validation-banner hidden" role="alert">
+                <div class="banner-header">
+                    <div class="banner-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="banner-text" id="bannerMessage">Unsupported file formats detected. Please review rejected files below.</div>
+                    <button class="banner-close" id="closeBannerBtn" aria-label="Close message"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="unsupportedFilesList" class="unsupported-files-list"></div>
+                <div class="banner-actions">
+                    <button type="button" class="btn-banner-action" id="clearInvalidBtn">
+                        <i class="fa-solid fa-trash-can"></i> Remove All Unsupported Files
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= STEP 1: BULK UPLOAD SCREEN ================= -->
+            <section id="step1View" class="step-card active-step">
+                <div class="card-header text-center">
+                    <h2>Upload Bulk Source Images</h2>
+                    <p>Select or drag & drop single or multiple image files (JPG, PNG, WEBP, BMP, GIF, AVIF) to begin batch conversion.</p>
+                </div>
+
+                <!-- Drag and Drop Dropzone -->
+                <div id="dropZone" class="drop-zone">
+                    <input type="file" id="fileInput" accept="image/*,.jpg,.jpeg,.png,.webp,.bmp,.gif,.avif,.svg" class="file-input-hidden" multiple>
+                    <div class="drop-zone-content">
+                        <div class="upload-icon-wrapper">
+                            <i class="fa-solid fa-cloud-arrow-up cloud-icon"></i>
+                            <div class="glow-ring"></div>
+                        </div>
+                        <h3>Drag & Drop single or bulk images here</h3>
+                        <p class="drop-subtext">Supports PNG, JPG, JPEG, WEBP, BMP, GIF, AVIF (Up to 50MB per file)</p>
+                        <div class="divider-text"><span>OR</span></div>
+                        <button type="button" id="browseBtn" class="btn btn-secondary">
+                            <i class="fa-solid fa-folder-open"></i> Choose Bulk Files
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Selected Files Batch Queue View -->
+                <div id="selectedFileCard" class="selected-file-card hidden">
+                    <div class="queue-header-bar">
+                        <div class="queue-summary-stats">
+                            <span class="queue-title"><i class="fa-solid fa-images"></i> File Queue</span>
+                            <span id="queueCountBadge" class="badge-pill count-badge">0 Files</span>
+                            <span id="queueValidBadge" class="badge-pill valid-badge">0 Valid</span>
+                            <span id="queueInvalidBadge" class="badge-pill invalid-badge hidden">0 Unsupported</span>
+                        </div>
+                        <div class="queue-actions">
+                            <button type="button" id="addMoreFilesBtn" class="btn-sm-action">
+                                <i class="fa-solid fa-plus"></i> Add More
+                            </button>
+                            <button type="button" id="clearAllQueueBtn" class="btn-sm-action danger">
+                                <i class="fa-solid fa-trash-can"></i> Clear Queue
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable List of Queue Cards -->
+                    <div id="fileQueueList" class="file-queue-list"></div>
+                </div>
+
+                <div class="card-footer align-right">
+                    <button type="button" id="nextToStep2Btn" class="btn btn-primary btn-large" disabled>
+                        <span>Configure & Edit Batch</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ================= STEP 2: INTERACTIVE EDIT & QUALITY SCREEN ================= -->
+            <section id="step2View" class="step-card hidden-step">
+                <div class="card-header text-center">
+                    <h2>Batch Image Editing & Quality Studio</h2>
+                    <p>Rotate, adjust aspect ratio, and configure WebP compression for your batch.</p>
+                </div>
+
+                <!-- Batch Active Image Switcher Toolbar -->
+                <div id="batchPreviewBar" class="batch-preview-bar">
+                    <span class="batch-bar-label"><i class="fa-solid fa-eye"></i> Active Preview:</span>
+                    <select id="previewFileSelect" class="styled-select"></select>
+                </div>
+
+                <div class="step2-grid">
+                    <!-- Left: Interactive Canvas Editor Preview Column -->
+                    <div class="preview-panel">
+                        <div class="preview-box" id="editorPreviewBox">
+                            <img id="qualityPreviewImg" src="" alt="Quality Preview Source">
+                            <div class="source-tag" id="aspectRatioTag">Original Aspect</div>
+                        </div>
+
+                        <!-- Technical Quick Toolbar Below Preview -->
+                        <div class="editor-toolbar">
+                            <button type="button" class="tool-btn" id="rotate90Btn" title="Rotate 90° Clockwise">
+                                <i class="fa-solid fa-rotate-right"></i> Rotate 90°
+                            </button>
+                            <button type="button" class="tool-btn" id="flipHBtn" title="Flip Horizontal">
+                                <i class="fa-solid fa-arrows-left-right"></i> Flip H
+                            </button>
+                            <button type="button" class="tool-btn" id="flipVBtn" title="Flip Vertical">
+                                <i class="fa-solid fa-arrows-up-down"></i> Flip V
+                            </button>
+                            <button type="button" class="tool-btn danger-tool" id="resetEditBtn" title="Reset Edits">
+                                <i class="fa-solid fa-rotate-left"></i> Reset
+                            </button>
+                        </div>
+                        <div class="source-meta">
+                            <span id="sourceDimBadge">0 × 0 px</span> &bull; <span id="orientationBadge">Landscape</span>
+                        </div>
+                    </div>
+
+                    <!-- Right: Aspect Ratio & Quality Controls -->
+                    <div class="controls-panel">
+                        <!-- Portrait / Landscape / Aspect Ratio Selector -->
+                        <div class="control-group">
+                            <label class="control-group-title"><i class="fa-solid fa-crop-simple"></i> Orientation & Aspect Ratio (Batch-wide)</label>
+                            <div class="aspect-buttons">
+                                <button type="button" class="aspect-btn active" data-aspect="original">
+                                    <i class="fa-solid fa-image"></i>
+                                    <span>Original</span>
+                                </button>
+                                <button type="button" class="aspect-btn" data-aspect="landscape">
+                                    <i class="fa-solid fa-pager"></i>
+                                    <span>Landscape (16:9)</span>
+                                </button>
+                                <button type="button" class="aspect-btn" data-aspect="portrait">
+                                    <i class="fa-solid fa-mobile-screen"></i>
+                                    <span>Portrait (9:16)</span>
+                                </button>
+                                <button type="button" class="aspect-btn" data-aspect="square">
+                                    <i class="fa-solid fa-square"></i>
+                                    <span>Square (1:1)</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Compression Mode: Lossy vs Lossless -->
+                        <div class="control-group">
+                            <label class="control-group-title"><i class="fa-solid fa-microchip"></i> Technical Encoding Mode</label>
+                            <div class="encoding-mode-toggle">
+                                <button type="button" class="mode-btn active" id="modeLossyBtn">
+                                    <i class="fa-solid fa-bolt"></i> Lossy (Max Savings)
+                                </button>
+                                <button type="button" class="mode-btn" id="modeLosslessBtn">
+                                    <i class="fa-solid fa-shield-halved"></i> Lossless (Exact Pixels)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Quality Slider -->
+                        <div class="quality-header-row">
+                            <label for="qualitySlider" class="quality-label"><i class="fa-solid fa-sliders"></i> Quality Factor</label>
+                            <div class="quality-value-badge"><span id="qualityValueText">75</span>%</div>
+                        </div>
+
+                        <div class="slider-wrapper">
+                            <input type="range" id="qualitySlider" min="10" max="100" value="75" class="styled-slider">
+                            <div class="slider-ticks">
+                                <span>Small (10%)</span>
+                                <span>Balanced (75%)</span>
+                                <span>High (100%)</span>
+                            </div>
+                        </div>
+
+                        <!-- Quality Preset Buttons -->
+                        <div class="preset-buttons">
+                            <button type="button" class="preset-btn" data-preset="50">
+                                <span>Small Size</span>
+                                <small>50% Quality</small>
+                            </button>
+                            <button type="button" class="preset-btn active" data-preset="75">
+                                <span>Balanced</span>
+                                <small>75% Recommended</small>
+                            </button>
+                            <button type="button" class="preset-btn" data-preset="90">
+                                <span>High Quality</span>
+                                <small>90% Ultra</small>
+                            </button>
+                        </div>
+
+                        <!-- Real-time Estimated Size Box -->
+                        <div class="estimation-box">
+                            <div class="est-row">
+                                <span>Total Original Batch Size:</span>
+                                <strong id="estOriginalSize">0 KB</strong>
+                            </div>
+                            <div class="est-row highlight-row">
+                                <span>Est. WebP Batch Size:</span>
+                                <strong id="estWebpSize">Calculating...</strong>
+                            </div>
+                            <div class="savings-chip" id="estSavingsChip">-0% Savings</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer space-between">
+                    <button type="button" id="backToStep1Btn" class="btn btn-secondary btn-large">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        <span>Back</span>
+                    </button>
+                    <button type="button" id="startConvertBtn" class="btn btn-primary btn-large glow-btn">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Convert All to WebP</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ================= STEP 3: PROCESSING SCREEN ================= -->
+            <section id="step3View" class="step-card hidden-step">
+                <div class="processing-container">
+                    
+                    <!-- Circular SVG Progress Bar -->
+                    <div class="progress-ring-wrapper">
+                        <svg class="progress-ring" width="220" height="220" viewBox="0 0 220 220">
+                            <defs>
+                                <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00f0ff" />
+                                    <stop offset="50%" stop-color="#8a2be2" />
+                                    <stop offset="100%" stop-color="#00ff88" />
+                                </linearGradient>
+                                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur stdDeviation="6" result="blur" />
+                                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                                </filter>
+                            </defs>
+                            <circle class="progress-ring-track" cx="110" cy="110" r="90" stroke-width="12" />
+                            <circle id="progressRingCircle" class="progress-ring-indicator" cx="110" cy="110" r="90" stroke-width="12" stroke="url(#ringGradient)" filter="url(#glow)" />
+                        </svg>
+                        <div class="progress-percentage">
+                            <span id="percentText">0</span>%
+                        </div>
+                    </div>
+
+                    <div class="processing-status">
+                        <h3 id="processingTitle">Converting batch images to WebP…</h3>
+                        <p id="processingSubtext">Executing high-speed client-side galaxy compression...</p>
+                    </div>
+
+                    <!-- Per-File Realtime Batch Status List -->
+                    <div id="batchProgressList" class="batch-progress-list"></div>
+
+                    <!-- Glowing loader activity dots -->
+                    <div class="pulse-loader">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ================= STEP 4: RESULT & ZIP DOWNLOAD SCREEN ================= -->
+            <section id="step4View" class="step-card hidden-step">
+                <div class="card-header text-center">
+                    <h2>WebP Optimization & ZIP Ready!</h2>
+                    <p>Review converted batch images, download individual files, or download all files inside a single compressed ZIP archive.</p>
+                </div>
+
+                <!-- Technical Metrics Highlights Grid -->
+                <div class="metrics-row enterprise-metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-icon icon-original"><i class="fa-solid fa-file-image"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Total Original Size</span>
+                            <span class="metric-value" id="resultOriginalSize">0 KB</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card highlight-card">
+                        <div class="metric-icon icon-webp"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Total WebP Converted</span>
+                            <span class="metric-value highlight-cyan" id="resultWebpSize">0 KB</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card success-card">
+                        <div class="metric-icon icon-savings"><i class="fa-solid fa-arrow-down-long"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Total Data Saved</span>
+                            <span class="metric-value highlight-green" id="resultSavingsPercent">-0%</span>
+                        </div>
+                    </div>
+
+                    <div class="metric-card tech-card">
+                        <div class="metric-icon icon-ssim"><i class="fa-solid fa-file-zipper"></i></div>
+                        <div class="metric-content">
+                            <span class="metric-label">Batch Files Converted</span>
+                            <span class="metric-value highlight-purple" id="resultBatchCount">0 / 0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Privacy & Technical Badges Banner -->
+                <div class="technical-meta-banner">
+                    <div class="tech-badge-item">
+                        <i class="fa-solid fa-shield-check icon-green"></i>
+                        <span>EXIF Metadata Sanitized</span>
+                    </div>
+                    <div class="tech-badge-item">
+                        <i class="fa-solid fa-file-zipper icon-cyan"></i>
+                        <span>ZIP Archive Ready</span>
+                    </div>
+                    <div class="tech-badge-item">
+                        <i class="fa-solid fa-lock icon-purple"></i>
+                        <span>100% In-Browser Privacy</span>
+                    </div>
+                </div>
+
+                <!-- Primary ZIP Download Hero Button -->
+                <div class="zip-hero-download-box">
+                    <button type="button" id="downloadZipBtn" class="btn btn-success btn-huge glow-btn-green">
+                        <i class="fa-solid fa-file-zipper"></i>
+                        <div class="btn-text-col">
+                            <span class="btn-main-title">Download All as ZIP Archive (.zip)</span>
+                            <span class="btn-sub-title" id="zipSubText">Contains all converted .webp images</span>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Batch Results List Container -->
+                <div class="batch-results-wrapper">
+                    <h3 class="results-table-title"><i class="fa-solid fa-list-check"></i> Converted Files Breakdown</h3>
+                    <div id="batchResultsContainer" class="batch-results-container"></div>
+                </div>
+
+                <!-- Result Actions Bar -->
+                <div class="card-footer space-between result-actions">
+                    <button type="button" id="convertAnotherBtn" class="btn btn-secondary btn-large">
+                        <i class="fa-solid fa-rotate-left"></i>
+                        <span>Convert Another Batch</span>
+                    </button>
+                    <button type="button" id="downloadWebpBtn" class="btn btn-primary btn-large hidden">
+                        <i class="fa-solid fa-download"></i>
+                        <span>Download Selected WebP</span>
+                    </button>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- App Footer -->
+        <footer class="app-footer">
+            <p>BINI In-House WebP Converter &bull; Galaxy Studio Batch WASM Engine &bull; High-Performance Client-Side Optimization</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Application Script -->
+    <script src="script.js"></script>
+</body>
+</html>

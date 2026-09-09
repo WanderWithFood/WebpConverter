@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const SUPPORTED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif', 'avif', 'svg'];
     const SUPPORTED_MIMES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/bmp', 'image/gif', 'image/avif', 'image/svg+xml'];
+    // Sanity limits to avoid decoding/processing extremely large images
+    const MAX_DIMENSION = 10000; // max width or height in pixels
+    const MAX_TOTAL_PIXELS = 10000 * 10000; // max total pixels (width * height)
 
     // DOM Elements - Stepper Navigation
     const navSteps = [
@@ -324,6 +327,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.width = img.naturalWidth;
                         item.height = img.naturalHeight;
                         item.dimensions = `${img.naturalWidth} × ${img.naturalHeight}`;
+
+                        // Dimension sanity check: reject extremely large decoded images
+                        const totalPixels = (item.width || 0) * (item.height || 0);
+                        if (item.width > MAX_DIMENSION || item.height > MAX_DIMENSION || totalPixels > MAX_TOTAL_PIXELS) {
+                            item.isValid = false;
+                            item.status = 'error';
+                            item.errorMsg = `Image dimensions too large (${item.width}×${item.height}). Max ${MAX_DIMENSION} per side or ${MAX_TOTAL_PIXELS} total pixels.`;
+                        }
+
                         updateQueueUI();
                     };
                     img.onerror = () => {
@@ -729,6 +741,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const img = queueItem.imageObj;
             let srcW = img.naturalWidth || img.width;
             let srcH = img.naturalHeight || img.height;
+
+            // Additional protection: re-check dimensions before canvas allocation
+            const totalPixels = (srcW || 0) * (srcH || 0);
+            if (srcW > MAX_DIMENSION || srcH > MAX_DIMENSION || totalPixels > MAX_TOTAL_PIXELS) {
+                reject(new Error(`Image dimensions too large to process (${srcW}×${srcH}).`));
+                return;
+            }
 
             // Target aspect ratio crop calculation
             let cropW = srcW;

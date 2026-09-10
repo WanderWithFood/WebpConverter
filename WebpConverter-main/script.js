@@ -1023,20 +1023,22 @@ document.addEventListener('DOMContentLoaded', () => {
             batchResultsContainer.querySelectorAll('[data-download-item-id]').forEach(button => {
                 button.addEventListener('click', (event) => {
                     event.stopPropagation();
-                    const itemId = Number(button.getAttribute('data-download-item-id'));
+                    const itemId = button.getAttribute('data-download-item-id');
                     const selectedItem = state.filesQueue.find(file => file.id === itemId && file.status === 'done');
-                    if (!selectedItem || !selectedItem.webpUrl) {
+                    if (!selectedItem || !selectedItem.webpBlob) {
                         showToast('Selected WebP file is not ready to download yet.', 'fa-solid fa-triangle-exclamation');
                         return;
                     }
 
                     state.selectedWebpId = itemId;
+                    const downloadUrl = URL.createObjectURL(selectedItem.webpBlob);
                     const link = document.createElement('a');
-                    link.href = selectedItem.webpUrl;
+                    link.href = downloadUrl;
                     link.download = `${selectedItem.name.replace(/\.[^/.]+$/, '')}.webp`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
+                    setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
                     showToast('Selected WebP download started successfully!', 'fa-solid fa-download');
                 });
             });
@@ -1064,18 +1066,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (downloadWebpBtn) {
         downloadWebpBtn.addEventListener('click', () => {
-            const selectedItem = state.filesQueue.find(item => item.id === state.selectedWebpId && item.isValid && item.status === 'done' && item.webpUrl);
+            const selectedItem = state.filesQueue.find(item => item.id === state.selectedWebpId && item.isValid && item.status === 'done' && item.webpBlob);
             if (!selectedItem) {
                 showToast('Please select a converted image before downloading.', 'fa-solid fa-triangle-exclamation');
                 return;
             }
 
+            const downloadUrl = URL.createObjectURL(selectedItem.webpBlob);
             const link = document.createElement('a');
-            link.href = selectedItem.webpUrl;
+            link.href = downloadUrl;
             link.download = `${selectedItem.name.replace(/\.[^/.]+$/, '')}.webp`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
 
             showToast('Selected WebP download started successfully!', 'fa-solid fa-download');
         });

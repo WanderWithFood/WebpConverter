@@ -64,6 +64,31 @@ No installation or server setup is required.
 
 All image processing is performed entirely inside your browser. Your images are never uploaded to any server, ensuring complete privacy and security.
 
+### 🔐 Automatic Metadata Stripping (EXIF Removal)
+
+**Critical Privacy Feature:** This converter automatically strips all embedded metadata from your images during conversion:
+
+#### Removed Metadata Includes:
+- **GPS/Location Data** - Latitude, longitude, altitude coordinates that identify where photos were taken
+- **Device Information** - Camera model, serial numbers, device identifiers
+- **Timestamps** - Date and time the photo was taken
+- **Exposure & Camera Settings** - Aperture, ISO, focal length, etc.
+- **All EXIF Tags** - Complete EXIF data removal
+- **XMP & IPTC Data** - Extended metadata tags
+
+#### How It Works:
+When converting to WebP, the original image file is decoded into pixels and redrawn onto a canvas. The `canvas.toBlob()` method then encodes only the pixel content into the WebP file, automatically discarding all embedded metadata. **No EXIF data survives this process.**
+
+#### Why This Matters:
+Photos taken on smartphones often contain GPS coordinates showing the exact location where the photo was taken. Publishing these images online without stripping EXIF data can compromise privacy and security (restaurant locations, home addresses, etc.). This converter ensures that all converted WebP files are clean of location data and device-identifying information.
+
+#### Security Guarantee:
+✅ GPS coordinates are REMOVED  
+✅ Device model information is REMOVED  
+✅ Timestamps are REMOVED  
+✅ All EXIF tags are REMOVED  
+✅ Only pixel content is preserved
+
 ## 🎯 Key Highlights
 
 - Fast batch conversion

@@ -1,5 +1,12 @@
 /* ==========================================================================
    BINI IN-HOUSE WEBP CONVERTER - GALAXY STUDIO BATCH EDITION SCRIPT
+   
+   PRIVACY & SECURITY FEATURE:
+   This application automatically strips all EXIF metadata (GPS coordinates,
+   device information, timestamps, etc.) from images during conversion.
+   Metadata stripping is performed by design at the canvas.toBlob() stage,
+   ensuring that only pixel content is encoded into the output WebP file.
+   
    ========================================================================== */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -793,6 +800,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * convertCanvas - Convert image to WebP format with automatic EXIF metadata stripping.
+     * 
+     * PRIVACY & SECURITY FEATURE: This function intentionally strips all EXIF metadata (GPS,
+     * device info, timestamps, etc.) from the original image. When pixel data is drawn onto
+     * a canvas and exported via canvas.toBlob(), only the rendered pixels are encoded into
+     * the WebP file—all embedded metadata is discarded. This protects users' privacy by
+     * preventing sensitive location data (GPS coordinates) and device identifying information
+     * from being included in converted files.
+     * 
+     * Metadata Stripping Guarantees:
+     * - GPS coordinates (latitude, longitude, altitude) are REMOVED
+     * - Device model and serial information is REMOVED
+     * - Timestamps and exposure data is REMOVED
+     * - All EXIF tags and XMP/IPTC data is REMOVED
+     * - Only pixel content is preserved in the output WebP file
+     */
     function convertCanvas(queueItem, resolve, reject) {
         try {
             const img = queueItem.imageObj;
@@ -867,6 +891,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const qualityParam = state.encodingMode === 'lossless' ? 1.0 : (state.qualityValue / 100);
 
+            // METADATA STRIPPING STEP: canvas.toBlob() encodes only pixel data into WebP.
+            // All EXIF metadata (GPS, camera info, timestamps) is automatically discarded.
+            // The resulting blob contains zero embedded metadata—it's a clean, privacy-safe file.
             canvas.toBlob((blob) => {
                 if (!blob) {
                     reject(new Error('Canvas export returned empty blob'));

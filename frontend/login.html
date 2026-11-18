@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign in - BINI Image Converter</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login">
+  <div class="card lc">
+    <div class="logo logo-lg">B</div>
+    <h1>BINI Image Converter</h1>
+    <p>Private portal for BINI staff and connected systems. Sign in with your BINI account.</p>
+    <a class="btn pri" href="/auth/login" style="display:block;text-align:center;text-decoration:none">Sign in with Founders Desk</a>
+    <div class="hr">Core admin only</div>
+    <button class="btn" id="bg-toggle" type="button">Use break-glass account</button>
+    <form id="bg" hidden style="margin-top:14px" autocomplete="off">
+      <div class="fld"><label for="u">Username</label><input type="text" id="u" autocomplete="off"></div>
+      <div class="fld"><label for="p">Password</label><input type="password" id="p" autocomplete="off"></div>
+      <div class="fld"><label for="c">Authenticator code</label><input type="text" id="c" inputmode="numeric" maxlength="6" autocomplete="off"></div>
+      <div id="err" class="pill p-bad" hidden></div>
+      <button class="btn pri" type="submit" style="margin-top:10px">Sign in</button>
+    </form>
+    <p class="fine">Access is granted by the core admin. Contact the core admin if you cannot sign in.</p>
+  </div>
+</div>
+<script src="js/login.js"></script>
+</body>
+</html>

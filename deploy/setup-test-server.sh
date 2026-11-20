@@ -63,7 +63,7 @@ npm run migrate
 echo "== 5. Start"
 if pm2 describe wpc-test >/dev/null 2>&1; then pm2 restart wpc-test --update-env; else pm2 start src/server.js --name wpc-test; fi
 pm2 save
-sudo command -v ufw >/dev/null && sudo ufw status | grep -q active && sudo ufw allow $PORT/tcp || true
+if command -v ufw >/dev/null && sudo ufw status | grep -q active; then sudo ufw allow $PORT/tcp; fi
 
 sleep 2
 curl -s "http://localhost:$PORT/healthz" && echo
